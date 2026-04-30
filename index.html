@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pausa Café · Sucré</title>
+  <style>
+    :root {
+      --brand-red:    #FA2458;
+      --brand-coral:  #FC4A4E;
+      --brand-yellow: #FED278;
+      --brand-green:  #C4FEDA;
+      --dark:  #1C1C2E;
+      --mid:   #6B7280;
+      --light: #F9FAFB;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(150deg, var(--brand-red) 0%, var(--brand-coral) 45%, var(--brand-yellow) 100%);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 28px;
+      padding: 44px 36px 36px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 24px 72px rgba(0,0,0,.18);
+      text-align: center;
+    }
+
+    /* ── Marca ── */
+    .brand { margin-bottom: 32px; }
+    .brand-logo {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--brand-red);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .brand-logo em { font-style: normal; color: var(--brand-yellow); }
+    .brand-sub {
+      margin-top: 4px;
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+
+    /* ── Telas ── */
+    .screen { display: none; }
+    .screen.ativa { display: block; }
+
+    /* ── Input de matrícula ── */
+    .field-label {
+      display: block;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--dark);
+      text-align: left;
+      margin-bottom: 10px;
+    }
+    .matricula-input {
+      width: 100%;
+      padding: 22px 16px;
+      font-size: 2.4rem;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 6px;
+      color: var(--dark);
+      border: 3px solid #E5E7EB;
+      border-radius: 18px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      margin-bottom: 20px;
+    }
+    .matricula-input:focus {
+      border-color: var(--brand-red);
+      box-shadow: 0 0 0 4px rgba(250,36,88,.12);
+    }
+
+    /* ── Botões ── */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 22px 16px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: transform .1s, box-shadow .1s, opacity .15s;
+      margin-bottom: 12px;
+      letter-spacing: .3px;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand-red), var(--brand-coral));
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(250,36,88,.32);
+    }
+    .btn-iniciar {
+      background: linear-gradient(135deg, #16A34A, #22C55E);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(22,163,74,.28);
+      font-size: 1.35rem;
+    }
+    .btn-encerrar {
+      background: linear-gradient(135deg, #D97706, var(--brand-yellow));
+      color: var(--dark);
+      box-shadow: 0 8px 24px rgba(217,119,6,.28);
+      font-size: 1.35rem;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 2px solid #E5E7EB;
+      color: var(--mid);
+      font-size: 1rem;
+      box-shadow: none;
+    }
+
+    /* ── Card do colaborador ── */
+    .colab-card {
+      background: var(--light);
+      border: 2px solid #E5E7EB;
+      border-radius: 18px;
+      padding: 22px 20px;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    .colab-nome {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+    .chip-mat  { background: var(--brand-red);    color: #fff; }
+    .chip-setor { background: var(--brand-yellow); color: var(--dark); }
+
+    /* ── Banner pausa em andamento ── */
+    .pausa-banner {
+      background: #FFFBEB;
+      border: 2px solid var(--brand-yellow);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 22px;
+      text-align: left;
+    }
+    .pausa-banner-label {
+      font-size: .85rem;
+      font-weight: 600;
+      color: #92400E;
+      margin-bottom: 4px;
+    }
+    .pausa-timer {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--brand-red);
+      letter-spacing: 2px;
+      line-height: 1.1;
+    }
+    .pausa-timer-sub {
+      font-size: .78rem;
+      color: #B45309;
+      margin-top: 2px;
+    }
+
+    /* ── Tela de feedback ── */
+    .feedback-icon { font-size: 5.5rem; margin-bottom: 12px; }
+    .feedback-titulo {
+      font-size: 1.75rem;
+      font-weight: 900;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+    .feedback-msg {
+      font-size: 1rem;
+      color: var(--mid);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .feedback-msg strong { color: var(--dark); }
+    .txt-success { color: #16A34A; }
+    .txt-warning { color: #D97706; }
+    .txt-error   { color: var(--brand-red); }
+    .countdown {
+      font-size: .85rem;
+      color: var(--mid);
+      margin-top: 12px;
+    }
+
+    /* ── Alerta de erro ── */
+    .alerta {
+      background: #FFF1F3;
+      border: 2px solid #FECDD3;
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--brand-red);
+      font-size: .9rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: none;
+      text-align: left;
+    }
+
+    /* ── Loading ── */
+    .loading {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 18px 0;
+      color: var(--mid);
+      font-size: .95rem;
+    }
+    .loading.ativo { display: flex; }
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid #E5E7EB;
+      border-top-color: var(--brand-red);
+      border-radius: 50%;
+      animation: gira .75s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes gira { to { transform: rotate(360deg); } }
+
+    /* ── Config alert ── */
+    .config-alert {
+      background: #FFF7ED;
+      border: 2px solid #FED7AA;
+      border-radius: 14px;
+      padding: 18px;
+      color: #9A3412;
+      font-size: .9rem;
+      line-height: 1.5;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .config-alert strong { display: block; margin-bottom: 4px; font-size: 1rem; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Cabeçalho -->
+  <div class="brand">
+    <div class="brand-logo">Sucr<em>é</em></div>
+    <div class="brand-sub">☕ Controle de Pausa</div>
+  </div>
+
+  <!-- ╔══════════════════════════════════╗
+       ║  TELA 1 — Digitar matrícula      ║
+       ╚══════════════════════════════════╝ -->
+  <div id="tela-matricula" class="screen ativa">
+
+    <div id="config-alert" class="config-alert" style="display:none">
+      <strong>⚙️ Configuração necessária</strong>
+      Abra o arquivo <code>index.html</code> e substitua o valor de
+      <code>SCRIPT_URL</code> pela URL do seu Apps Script implantado.
+    </div>
+
+    <label class="field-label" for="input-mat">Digite sua matrícula:</label>
+    <input
+      id="input-mat"
+      class="matricula-input"
+      type="text"
+      inputmode="numeric"
+      placeholder="0000"
+      maxlength="10"
+      autocomplete="off"
+      autofocus
+    >
+
+    <div id="alerta-mat" class="alerta"></div>
+
+    <div id="loading-busca" class="loading">
+      <div class="spinner"></div>
+      <span>Buscando colaborador…</span>
+    </div>
+
+    <button class="btn btn-primary" id="btn-consultar" onclick="buscarColaborador()">
+      Consultar →
+    </button>
+
+  </div>
+
+  <!-- ╔══════════════════════════════════╗
+       ║  TELA 2 — Ação (Iniciar/Encerrar)║
+       ╚══════════════════════════════════╝ -->
+  <div id="tela-acao" class="screen">
+
+    <div class="colab-card">
+      <div class="colab-nome" id="disp-nome"></div>
+      <div class="chips">
+        <span class="chip chip-mat"   id="disp-mat"></span>
+        <span class="chip chip-setor" id="disp-setor"></span>
+      </div>
+    </div>
+
+    <div id="banner-pausa" class="pausa-banner" style="display:none">
+      <div class="pausa-banner-label">☕ Pausa iniciada às <span id="disp-inicio"></span></div>
+      <div class="pausa-timer" id="timer">00:00</div>
+      <div class="pausa-timer-sub">tempo decorrido</div>
+    </div>
+
+    <div id="alerta-acao" class="alerta"></div>
+
+    <div id="loading-acao" class="loading">
+      <div class="spinner"></div>
+      <span>Registrando…</span>
+    </div>
+
+    <button id="btn-iniciar" class="btn btn-iniciar" onclick="iniciarPausa()">
+      ☕ Iniciar Pausa
+    </button>
+    <button id="btn-encerrar" class="btn btn-encerrar" style="display:none" onclick="encerrarPausa()">
+      ✓ Encerrar Pausa
+    </button>
+    <button class="btn btn-ghost" onclick="voltarInicio()">
+      ← Voltar
+    </button>
+
+  </div>
+
+  <!-- ╔══════════════════════════════════╗
+       ║  TELA 3 — Feedback               ║
+       ╚══════════════════════════════════╝ -->
+  <div id="tela-feedback" class="screen">
+    <div class="feedback-icon" id="fb-icon"></div>
+    <div class="feedback-titulo" id="fb-titulo"></div>
+    <p class="feedback-msg"     id="fb-msg"></p>
+    <button class="btn btn-primary" onclick="voltarInicio()">Nova Consulta</button>
+    <p class="countdown" id="countdown"></p>
+  </div>
+
+</div><!-- /card -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIGURAÇÃO — substitua pela URL do seu Apps Script
+// ═══════════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGVM3drauVseTRPsae8tU7D_zwTha9mAzsOBJCGdmFyzb1N10hMonqouxWzjhAU0R3/exec';
+// ═══════════════════════════════════════════════════════════
+
+let colaborador      = null;
+let timerInterval    = null;
+let inicioMs         = null;
+let countdownTimer   = null;
+
+// ── Inicialização ──────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (SCRIPT_URL.includes('SEU_SCRIPT_ID_AQUI')) {
+    document.getElementById('config-alert').style.display = 'block';
+  }
+  focusInput();
+});
+
+document.getElementById('input-mat').addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscarColaborador();
+});
+
+// ── Navegação ──────────────────────────────────────────────
+function mostrarTela(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('ativa'));
+  document.getElementById(id).classList.add('ativa');
+}
+
+function voltarInicio() {
+  pararTimer();
+  pararCountdown();
+  colaborador = null;
+  inicioMs    = null;
+  document.getElementById('input-mat').value = '';
+  ocultarAlerta('alerta-mat');
+  mostrarTela('tela-matricula');
+  focusInput();
+}
+
+function focusInput() {
+  setTimeout(() => document.getElementById('input-mat').focus(), 80);
+}
+
+// ── API ────────────────────────────────────────────────────
+async function api(params) {
+  const url = new URL(SCRIPT_URL);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ── Buscar colaborador ─────────────────────────────────────
+async function buscarColaborador() {
+  const mat = document.getElementById('input-mat').value.trim();
+  if (!mat) { mostrarAlerta('alerta-mat', 'Digite sua matrícula.'); return; }
+
+  ocultarAlerta('alerta-mat');
+  setLoadingBusca(true);
+
+  try {
+    const dados = await api({ action: 'buscar', matricula: mat });
+    if (dados.erro) { mostrarAlerta('alerta-mat', dados.erro); return; }
+    if (!dados.encontrado) {
+      mostrarAlerta('alerta-mat', 'Matrícula não encontrada. Verifique e tente novamente.');
+      return;
+    }
+
+    colaborador = dados;
+    const pausa = await api({ action: 'verificar', matricula: mat });
+    montarTelaAcao(pausa);
+
+  } catch (err) {
+    mostrarAlerta('alerta-mat', 'Erro de conexão. Verifique a internet e tente novamente.');
+    console.error(err);
+  } finally {
+    setLoadingBusca(false);
+  }
+}
+
+function montarTelaAcao(pausa) {
+  document.getElementById('disp-nome').textContent  = colaborador.nome;
+  document.getElementById('disp-mat').textContent   = `# ${colaborador.matricula}`;
+  document.getElementById('disp-setor').textContent = colaborador.setor;
+  ocultarAlerta('alerta-acao');
+
+  const btnIniciar  = document.getElementById('btn-iniciar');
+  const btnEncerrar = document.getElementById('btn-encerrar');
+  const banner      = document.getElementById('banner-pausa');
+
+  if (pausa.emPausa) {
+    btnIniciar.style.display  = 'none';
+    btnEncerrar.style.display = 'block';
+    banner.style.display      = 'block';
+    document.getElementById('disp-inicio').textContent = pausa.inicio;
+    iniciarTimerDe(pausa.inicio);
+  } else {
+    btnIniciar.style.display  = 'block';
+    btnEncerrar.style.display = 'none';
+    banner.style.display      = 'none';
+    pararTimer();
+  }
+
+  mostrarTela('tela-acao');
+}
+
+// ── Iniciar pausa ──────────────────────────────────────────
+async function iniciarPausa() {
+  ocultarAlerta('alerta-acao');
+  setLoadingAcao(true);
+
+  try {
+    const r = await api({
+      action:    'iniciar',
+      matricula: colaborador.matricula,
+      nome:      colaborador.nome,
+      setor:     colaborador.setor
+    });
+    if (r.erro) { mostrarAlerta('alerta-acao', r.erro); return; }
+
+    mostrarFeedback({
+      icon:  '☕',
+      titulo: 'Pausa iniciada!',
+      cls:   'txt-success',
+      msg:   `Aproveite, <strong>${colaborador.nome}</strong>!<br>Sua pausa começou às <strong>${r.inicio}</strong>.<br>Você tem até <strong>15 minutos</strong>.`,
+      voltar: 5
+    });
+
+  } catch (err) {
+    mostrarAlerta('alerta-acao', 'Erro de conexão. Tente novamente.');
+    console.error(err);
+  } finally {
+    setLoadingAcao(false);
+  }
+}
+
+// ── Encerrar pausa ─────────────────────────────────────────
+async function encerrarPausa() {
+  ocultarAlerta('alerta-acao');
+  setLoadingAcao(true);
+
+  try {
+    const r = await api({ action: 'encerrar', matricula: colaborador.matricula });
+    if (r.erro) { mostrarAlerta('alerta-acao', r.erro); return; }
+
+    pararTimer();
+
+    if (r.atingiuMeta) {
+      mostrarFeedback({
+        icon:  '✅',
+        titulo: 'Pausa concluída!',
+        cls:   'txt-success',
+        msg:   `Boa, <strong>${colaborador.nome}</strong>!<br>Você descansou <strong>${r.duracao} minuto${r.duracao !== 1 ? 's' : ''}</strong>. Bom trabalho, volte com energia! 💪`,
+        voltar: 5
+      });
+    } else {
+      mostrarFeedback({
+        icon:  '⏱️',
+        titulo: 'Pausa encerrada',
+        cls:   'txt-warning',
+        msg:   `<strong>${colaborador.nome}</strong>, sua pausa durou apenas <strong>${r.duracao} minuto${r.duracao !== 1 ? 's' : ''}</strong>.<br>A pausa recomendada é de <strong>15 minutos</strong> — aproveite mais na próxima!`,
+        voltar: 6
+      });
+    }
+
+  } catch (err) {
+    mostrarAlerta('alerta-acao', 'Erro de conexão. Tente novamente.');
+    console.error(err);
+  } finally {
+    setLoadingAcao(false);
+  }
+}
+
+// ── Timer ──────────────────────────────────────────────────
+function iniciarTimerDe(horaStr) {
+  pararTimer();
+  const [h, m, s] = horaStr.split(':').map(Number);
+  const base = new Date();
+  base.setHours(h, m, s, 0);
+  inicioMs = base.getTime();
+  atualizarTimer();
+  timerInterval = setInterval(atualizarTimer, 1000);
+}
+
+function atualizarTimer() {
+  const diff = Math.max(0, Date.now() - inicioMs);
+  const min  = Math.floor(diff / 60000);
+  const seg  = Math.floor((diff % 60000) / 1000);
+  document.getElementById('timer').textContent =
+    `${String(min).padStart(2,'0')}:${String(seg).padStart(2,'0')}`;
+}
+
+function pararTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+// ── Feedback ───────────────────────────────────────────────
+function mostrarFeedback({ icon, titulo, cls, msg, voltar }) {
+  document.getElementById('fb-icon').textContent    = icon;
+  const t = document.getElementById('fb-titulo');
+  t.className = `feedback-titulo ${cls}`;
+  t.textContent = titulo;
+  document.getElementById('fb-msg').innerHTML       = msg;
+
+  mostrarTela('tela-feedback');
+
+  if (voltar) {
+    let n = voltar;
+    document.getElementById('countdown').textContent = `Voltando automaticamente em ${n}s…`;
+    countdownTimer = setInterval(() => {
+      n--;
+      if (n <= 0) { pararCountdown(); voltarInicio(); }
+      else document.getElementById('countdown').textContent = `Voltando automaticamente em ${n}s…`;
+    }, 1000);
+  }
+}
+
+function pararCountdown() {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+}
+
+// ── Alertas ────────────────────────────────────────────────
+function mostrarAlerta(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent  = msg;
+  el.style.display = 'block';
+}
+function ocultarAlerta(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ── Estados de loading ─────────────────────────────────────
+function setLoadingBusca(show) {
+  document.getElementById('loading-busca').classList.toggle('ativo', show);
+  document.getElementById('btn-consultar').disabled = show;
+}
+function setLoadingAcao(show) {
+  document.getElementById('loading-acao').classList.toggle('ativo', show);
+  document.getElementById('btn-iniciar').disabled  = show;
+  document.getElementById('btn-encerrar').disabled = show;
+}
+</script>
+
+</body>
+</html>
