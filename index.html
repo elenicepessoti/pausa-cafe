@@ -243,6 +243,43 @@
     }
     @keyframes gira { to { transform: rotate(360deg); } }
 
+    /* ── Modal de confirmação ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    .modal-overlay.oculto { display: none; }
+    .modal-box {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 28px 28px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 72px rgba(0,0,0,.28);
+    }
+    .modal-icon  { font-size: 3.2rem; margin-bottom: 14px; }
+    .modal-titulo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+    .modal-msg {
+      font-size: .95rem;
+      color: var(--mid);
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+    .modal-acoes { display: flex; gap: 12px; }
+    .modal-acoes .btn { margin-bottom: 0; flex: 1; padding: 18px 12px; }
+
     /* ── Config alert ── */
     .config-alert {
       background: #FFF7ED;
@@ -355,6 +392,22 @@
 
 </div><!-- /card -->
 
+<!-- Modal de confirmação de encerramento antecipado -->
+<div id="modal-confirmacao" class="modal-overlay oculto">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-titulo">Encerrar pausa antecipada?</div>
+    <p class="modal-msg">
+      Você está encerrando com menos de <strong>15 minutos</strong>.<br>
+      Para continuar, autorize clicando em <strong>Sim</strong>.
+    </p>
+    <div class="modal-acoes">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-encerrar" onclick="confirmarEncerramento()">Sim, encerrar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 //  CONFIGURAÇÃO — substitua pela URL do seu Apps Script
@@ -418,7 +471,7 @@ async function buscarColaborador() {
   setLoadingBusca(true);
 
   try {
-    const dados = await api({ action: 'buscar', matricula: mat });
+    const dados = await api({ action: 'consultar', matricula: mat });
     if (dados.erro) { mostrarAlerta('alerta-mat', dados.erro); return; }
     if (!dados.encontrado) {
       mostrarAlerta('alerta-mat', 'Matrícula não encontrada. Verifique e tente novamente.');
@@ -426,8 +479,7 @@ async function buscarColaborador() {
     }
 
     colaborador = dados;
-    const pausa = await api({ action: 'verificar', matricula: mat });
-    montarTelaAcao(pausa);
+    montarTelaAcao(dados.pausa);
 
   } catch (err) {
     mostrarAlerta('alerta-mat', 'Erro de conexão. Verifique a internet e tente novamente.');
@@ -450,6 +502,7 @@ function montarTelaAcao(pausa) {
   if (pausa.emPausa) {
     btnIniciar.style.display  = 'none';
     btnEncerrar.style.display = 'block';
+    btnEncerrar.dataset.inicio = pausa.inicio;
     banner.style.display      = 'block';
     document.getElementById('disp-inicio').textContent = pausa.inicio;
     iniciarTimerDe(pausa.inicio);
@@ -494,7 +547,27 @@ async function iniciarPausa() {
 }
 
 // ── Encerrar pausa ─────────────────────────────────────────
-async function encerrarPausa() {
+function encerrarPausa() {
+  const timer = document.getElementById('timer').textContent; // "MM:SS"
+  const minutos = parseInt(timer.split(':')[0], 10);
+
+  if (minutos < 15) {
+    document.getElementById('modal-confirmacao').classList.remove('oculto');
+    return;
+  }
+  _executarEncerramento();
+}
+
+function fecharModal() {
+  document.getElementById('modal-confirmacao').classList.add('oculto');
+}
+
+function confirmarEncerramento() {
+  fecharModal();
+  _executarEncerramento();
+}
+
+async function _executarEncerramento() {
   ocultarAlerta('alerta-acao');
   setLoadingAcao(true);
 
@@ -504,20 +577,37 @@ async function encerrarPausa() {
 
     pararTimer();
 
-    if (r.atingiuMeta) {
+    const dur = `<strong>${r.duracao} minuto${r.duracao !== 1 ? 's' : ''}</strong>`;
+    if (r.status === 'Pausa abaixo do tempo') {
       mostrarFeedback({
-        icon:  '✅',
-        titulo: 'Pausa concluída!',
-        cls:   'txt-success',
-        msg:   `Boa, <strong>${colaborador.nome}</strong>!<br>Você descansou <strong>${r.duracao} minuto${r.duracao !== 1 ? 's' : ''}</strong>. Bom trabalho, volte com energia! 💪`,
+        icon:   '⏱️',
+        titulo: 'Pausa abaixo do tempo',
+        cls:    'txt-warning',
+        msg:    `<strong>${colaborador.nome}</strong>, sua pausa durou apenas ${dur}.<br>O tempo recomendado é de <strong>15 minutos</strong>.`,
+        voltar: 6
+      });
+    } else if (r.status === 'Dentro do tempo') {
+      mostrarFeedback({
+        icon:   '✅',
+        titulo: 'Dentro do tempo!',
+        cls:    'txt-success',
+        msg:    `Boa, <strong>${colaborador.nome}</strong>!<br>Você descansou ${dur}. Bom trabalho, volte com energia! 💪`,
         voltar: 5
+      });
+    } else if (r.status === 'Ultrapassou limite') {
+      mostrarFeedback({
+        icon:   '⚠️',
+        titulo: 'Ultrapassou o limite!',
+        cls:    'txt-warning',
+        msg:    `<strong>${colaborador.nome}</strong>, sua pausa durou ${dur}.<br>O limite é de <strong>15 minutos</strong>. Fique atento na próxima!`,
+        voltar: 6
       });
     } else {
       mostrarFeedback({
-        icon:  '⏱️',
-        titulo: 'Pausa encerrada',
-        cls:   'txt-warning',
-        msg:   `<strong>${colaborador.nome}</strong>, sua pausa durou apenas <strong>${r.duracao} minuto${r.duracao !== 1 ? 's' : ''}</strong>.<br>A pausa recomendada é de <strong>15 minutos</strong> — aproveite mais na próxima!`,
+        icon:   '🚨',
+        titulo: 'Pausa excedente!',
+        cls:    'txt-error',
+        msg:    `<strong>${colaborador.nome}</strong>, sua pausa durou ${dur}.<br>Isso está bem acima do limite de <strong>15 minutos</strong>. Converse com seu gestor.`,
         voltar: 6
       });
     }
